@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import { withRouter, Link } from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
 
 import { indexSequenceEntries } from '../../api/sequences/sequences_api'
 
-import { render, ReactDOM } from 'react-dom'
+import { render } from 'react-dom'
 import Modal from 'react-modal'
 import _ from 'lodash'
 
@@ -53,15 +53,34 @@ import 'react-table/react-table.css'
 //   })
 // }
 
+Modal.setAppElement(document.getElementById('root'))
+
 class Sequences extends Component {
   constructor () {
     super()
     this.state = {
       data: [],
       pages: null,
-      loading: true
+      loading: true,
+      modalIsOpen: false,
+      modalContent: null
     }
     this.fetchData = this.fetchData.bind(this)
+    this.openModal = this.openModal.bind(this)
+    this.afterOpenModal = this.afterOpenModal.bind(this)
+    this.closeModal = this.closeModal.bind(this)
+  }
+
+  openModal () {
+    this.setState({ modalIsOpen: true })
+  }
+
+  afterOpenModal () {
+  // references are now sync'd and can be accessed.
+  }
+
+  closeModal () {
+    this.setState({ modalIsOpen: false })
   }
 
   requestData = (pageSize, page, sorted, filtered) => {
@@ -161,13 +180,23 @@ class Sequences extends Component {
               Header: 'Sequence',
               accessor: 'sequence',
               Cell: ({ row }) => (
-                <Link to={{
-                  pathname: '/sequences/:id',
-                  state: { modal: true }
-                }}
-                className="link">
-                  {row.sequence}
-                </Link>
+                <div>
+                  <p onClick={this.openModal}>
+                    {row.sequence}
+                  </p>
+                  <Modal
+                    isOpen={this.state.modalIsOpen}
+                    onAfterOpen={this.afterOpenModal}
+                    onRequestClose={this.closeModal}
+                    contentLabel="Example Modal"
+                  >
+                    <h2>Hello</h2>
+                    <button onClick={this.closeModal}>close</button>
+                    <div>Name: {row.sequenceName}</div>
+                    <div>Description: {row.sequenceDescription}</div>
+                    <div>Sequence: {row.sequence}</div>
+                  </Modal>
+                </div>
               ) }
           ]}
           // manual // Forces table not to paginate or sort automatically, so we can handle it server-side
