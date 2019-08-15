@@ -8,6 +8,8 @@ import SignUp from '../SignUp/SignUp'
 import SignIn from '../SignIn/SignIn'
 import SignOut from '../SignOut/SignOut'
 import ChangePassword from '../ChangePassword/ChangePassword'
+import Sequences from '../Sequences/Sequences'
+import Modal from '../Sequences/Modal'
 
 class App extends Component {
   constructor () {
@@ -45,6 +47,10 @@ class App extends Component {
           <Route path='/sign-up' render={() => (
             <SignUp alert={this.alert} setUser={this.setUser} />
           )} />
+          <Route path='/sequences' render={() => (
+            <Sequences alert={this.alert} />
+          )} />
+          <Route path='/sequences/:id' component={Modal}/>
           <Route path='/sign-in' render={() => (
             <SignIn alert={this.alert} setUser={this.setUser} />
           )} />
