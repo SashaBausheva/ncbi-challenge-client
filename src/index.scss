@@ -1,1 +1,13 @@
 @import '~bootstrap/scss/bootstrap';
+
+.full-sequence {
+  word-wrap: break-word;
+}
+
+.sequence-link {
+  text-decoration: underline;
+  &:hover {
+    text-decoration: none;
+    cursor: pointer;
+  }
+}

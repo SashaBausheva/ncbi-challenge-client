@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 
 import { indexSequenceEntries } from '../../api/sequences/sequences_api'
+import '../../index.scss'
 
 import { render } from 'react-dom'
 import Modal from 'react-modal'
@@ -10,48 +11,6 @@ import _ from 'lodash'
 // Import React Table
 import ReactTable from 'react-table'
 import 'react-table/react-table.css'
-
-// const rawData = makeData()
-
-// const requestData = (pageSize, page, sorted, filtered) => {
-//   return new Promise((resolve, reject) => {
-//     // You can retrieve your data however you want, in this case, we will just use some local data.
-//     let filteredData = rawData
-//
-//     // You can use the filters in your request, but you are responsible for applying them.
-//     if (filtered.length) {
-//       filteredData = filtered.reduce((filteredSoFar, nextFilter) => {
-//         return filteredSoFar.filter(row => {
-//           return (row[nextFilter.id] + '').includes(nextFilter.value);
-//         })
-//       }, filteredData)
-//     }
-//     // You can also use the sorting in your request, but again, you are responsible for applying it.
-//     const sortedData = _.orderBy(
-//       filteredData,
-//       sorted.map(sort => {
-//         return row => {
-//           if (row[sort.id] === null || row[sort.id] === undefined) {
-//             return -Infinity
-//           }
-//           return typeof row[sort.id] === 'string'
-//             ? row[sort.id].toLowerCase()
-//             : row[sort.id]
-//         }
-//       }),
-//       sorted.map(d => (d.desc ? 'desc' : 'asc'))
-//     )
-//
-//     // You must return an object containing the rows of the current page, and optionally the total pages number.
-//     const res = {
-//       rows: sortedData.slice(pageSize * page, pageSize * page + pageSize),
-//       pages: Math.ceil(filteredData.length / pageSize)
-//     }
-//
-//     // Here we'll simulate a server response with 500ms of delay.
-//     setTimeout(() => resolve(res), 500)
-//   })
-// }
 
 Modal.setAppElement(document.getElementById('root'))
 
@@ -62,8 +21,12 @@ class Sequences extends Component {
       data: [],
       pages: null,
       loading: true,
-      modalIsOpen: false,
-      modalContent: null
+      modalOpen: false,
+      modalContent: {
+        sequenceName: '',
+        sequenceDescription: '',
+        sequence: ''
+      }
     }
     this.fetchData = this.fetchData.bind(this)
     this.openModal = this.openModal.bind(this)
@@ -71,8 +34,18 @@ class Sequences extends Component {
     this.closeModal = this.closeModal.bind(this)
   }
 
-  openModal () {
-    this.setState({ modalIsOpen: true })
+  openModal (row) {
+    if (!this.state.modalOpen) {
+      console.log('this is row', row)
+      this.setState({
+        modalContent: {
+          sequenceName: row._original.sequenceName,
+          sequenceDescription: row._original.sequenceDescription,
+          sequence: row._original.sequence
+        },
+        modalOpen: true
+      })
+    }
   }
 
   afterOpenModal () {
@@ -80,7 +53,18 @@ class Sequences extends Component {
   }
 
   closeModal () {
-    this.setState({ modalIsOpen: false })
+    if (this.state.modalOpen) {
+      this.setState({
+        modalContent: {
+          row: {
+            sequenceName: '',
+            sequenceDescription: '',
+            sequence: ''
+          }
+        },
+        modalOpen: false
+      })
+    }
   }
 
   requestData = (pageSize, page, sorted, filtered) => {
@@ -89,45 +73,33 @@ class Sequences extends Component {
 
       indexSequenceEntries()
         .then((response) => {
-          let filteredData = response.data.sequences
-          console.log('filtered data is ', filteredData)
+          const filteredData = response.data.sequences
 
-          // You can use the filters in your request, but you are responsible for applying them.
-          if (filtered.length) {
-            console.log('fil length', filtered)
-            filteredData = filtered.reduce((filteredSoFar, nextFilter) => {
-              console.log('so far', filteredSoFar, 'next', nextFilter)
-              return filteredSoFar.filter(row => {
-                return ((row[nextFilter.id]).toLowerCase() + '').includes((nextFilter.value).toLowerCase())
-              })
-            }, filteredData)
-          }
           // You can also use the sorting in your request, but again, you are responsible for applying it.
           const sortedData = _.orderBy(
             filteredData,
             sorted.map(sort => {
-              console.log('sorted is', sorted)
               return row => {
                 if (row[sort.id] === null || row[sort.id] === undefined) {
                   return -Infinity
                 }
                 return typeof row[sort.id] === 'string'
                   ? row[sort.id].toLowerCase()
-                  : row[sort.id]
+                  : row[sort.id].toLowerCase()
               }
             }),
             sorted.map(d => (d.desc ? 'desc' : 'asc'))
           )
 
-          console.log('sored data ', sortedData)
-
-          console.log('filtered', filtered)
-
+          console.log('sorted data is ', sortedData)
           // You must return an object containing the rows of the current page, and optionally the total pages number.
           const res = {
             rows: sortedData.slice(pageSize * page, pageSize * page + pageSize),
             pages: Math.ceil(filteredData.length / pageSize)
           }
+
+          console.log('res is ', res)
+          console.log('filtered data is ', filteredData)
 
           // Here we'll simulate a server response with 500ms of delay.
           setTimeout(() => resolve(res), 500)
@@ -149,7 +121,6 @@ class Sequences extends Component {
       state.sorted,
       state.filtered
     ).then(res => {
-      console.log('fetch dta state ', state)
       // Now just get the rows of data to your React Table (and update anything else like total pages or loading)
       this.setState({
         data: res.rows,
@@ -159,10 +130,24 @@ class Sequences extends Component {
     })
   }
 
+  filterCaseInsensitive (filter, row) {
+    const id = filter.pivotId || filter.id
+    return (
+      row[id] !== undefined
+        ? String(row[id].toLowerCase()).includes(filter.value.toLowerCase())
+        : true)
+  }
+
+  renderLetter (sequence) {
+    const array = sequence.split('')
+    return array
+  }
+
   render () {
     const { data, pages, loading } = this.state
-    console.log('state is ', this.state)
-    console.log(data)
+    console.log('data is ', data)
+    console.log('this state is ', this.state)
+    console.log('at first', this.state.modalContent)
     return (
       <div>
         <ReactTable
@@ -173,42 +158,53 @@ class Sequences extends Component {
             },
             {
               Header: 'Description',
-              id: 'sequenceDescription',
-              accessor: d => d.sequenceDescription
+              accessor: 'sequenceDescription'
             },
             {
               Header: 'Sequence',
               accessor: 'sequence',
               Cell: ({ row }) => (
-                <div>
-                  <p onClick={this.openModal}>
-                    {row.sequence}
-                  </p>
-                  <Modal
-                    isOpen={this.state.modalIsOpen}
-                    onAfterOpen={this.afterOpenModal}
-                    onRequestClose={this.closeModal}
-                    contentLabel="Example Modal"
-                  >
-                    <h2>Hello</h2>
-                    <button onClick={this.closeModal}>close</button>
-                    <div>Name: {row.sequenceName}</div>
-                    <div>Description: {row.sequenceDescription}</div>
-                    <div>Sequence: {row.sequence}</div>
-                  </Modal>
-                </div>
+                <span className="sequence-link" onClick= { () => this.openModal(row) }>{row.sequence}</span>
               ) }
           ]}
           // manual // Forces table not to paginate or sort automatically, so we can handle it server-side
-          data={data}
+          data={this.state.data}
           pages={pages} // Display the total number of pages
           loading={loading} // Display the loading overlay when we need it
           onFetchData={this.fetchData} // Request new data when things change
           filterable
+          defaultFilterMethod={(filter, row) => this.filterCaseInsensitive(filter, row) }
           defaultPageSize={10}
           className="-striped -highlight"
         />
         <br />
+
+        <Modal
+          isOpen={this.state.modalOpen}
+          onAfterOpen={this.afterOpenModal}
+          onRequestClose={this.closeModal}
+          contentLabel="Example Modal"
+        >
+          {this.state.modalContent.sequence ? <div><h2>Sequence Info</h2>
+            <button onClick={this.closeModal}>close</button>
+            <div>Name: {this.state.modalContent.sequenceName}</div>
+            <div>Description: {this.state.modalContent.sequenceDescription}</div>
+            <div>Sequence:</div>
+            <div className="full-sequence">
+              {(this.renderLetter(this.state.modalContent.sequence)).map(letter => {
+                switch (letter) {
+                case 'A':
+                  return <span style={{ color: 'red' }}>{letter}</span>
+                case 'T':
+                  return <span style={{ color: 'orange' }}>{letter}</span>
+                case 'C':
+                  return <span style={{ color: 'blue' }}>{letter}</span>
+                default:
+                  return <span style={{ color: 'green' }}>{letter}</span>
+                }
+              }) } </div>
+          </div> : '' }
+        </Modal>
       </div>
     )
   }
