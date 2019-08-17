@@ -1,15 +1,12 @@
 import React, { Component, Fragment } from 'react'
 import { Route } from 'react-router-dom'
+import { SnackbarProvider } from 'notistack'
 
-import AuthenticatedRoute from '../AuthenticatedRoute/AuthenticatedRoute'
 import AutoDismissAlert from '../AutoDismissAlert/AutoDismissAlert'
 import Header from '../Header/Header'
-import SignUp from '../SignUp/SignUp'
-import SignIn from '../SignIn/SignIn'
-import SignOut from '../SignOut/SignOut'
-import ChangePassword from '../ChangePassword/ChangePassword'
+
 import Sequences from '../Sequences/Sequences'
-import Modal from '../Sequences/Modal'
+import AddSequence from '../Sequences/AddSequence'
 
 class App extends Component {
   constructor () {
@@ -34,33 +31,25 @@ class App extends Component {
 
     return (
       <Fragment>
-        <Header user={user} />
-        {alerts.map((alert, index) => (
-          <AutoDismissAlert
-            key={index}
-            heading={alert.heading}
-            variant={alert.variant}
-            message={alert.message}
-          />
-        ))}
-        <main className="container">
-          <Route path='/sign-up' render={() => (
-            <SignUp alert={this.alert} setUser={this.setUser} />
-          )} />
-          <Route path='/sequences' render={() => (
-            <Sequences alert={this.alert} />
-          )} />
-          <Route path='/sequences/:id' component={Modal}/>
-          <Route path='/sign-in' render={() => (
-            <SignIn alert={this.alert} setUser={this.setUser} />
-          )} />
-          <AuthenticatedRoute user={user} path='/sign-out' render={() => (
-            <SignOut alert={this.alert} clearUser={this.clearUser} user={user} />
-          )} />
-          <AuthenticatedRoute user={user} path='/change-password' render={() => (
-            <ChangePassword alert={this.alert} user={user} />
-          )} />
-        </main>
+        <SnackbarProvider maxSnack={3} autoHideDuration={2000}>
+          <Header user={user} />
+          {alerts.map((alert, index) => (
+            <AutoDismissAlert
+              key={index}
+              heading={alert.heading}
+              variant={alert.variant}
+              message={alert.message}
+            />
+          ))}
+          <main className="container">
+            <Route path='/sequences' render={() => (
+              <Sequences alert={this.alert} />
+            )} />
+            <Route path='/add-sequence' render={() => (
+              <AddSequence alert={this.alert} />
+            )} />
+          </main>
+        </SnackbarProvider>
       </Fragment>
     )
   }

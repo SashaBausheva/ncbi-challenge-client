@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
+import { withSnackbar } from 'notistack'
+import messages from './messages'
 
 import { indexSequenceEntries } from '../../api/sequences/sequences_api'
 import '../../index.scss'
@@ -70,6 +72,7 @@ class Sequences extends Component {
   requestData = (pageSize, page, sorted, filtered) => {
     return new Promise((resolve, reject) => {
       // You can retrieve your data however you want, in this case, we will just use some local data.
+      const { enqueueSnackbar } = this.props
 
       indexSequenceEntries()
         .then((response) => {
@@ -104,8 +107,8 @@ class Sequences extends Component {
           // Here we'll simulate a server response with 500ms of delay.
           setTimeout(() => resolve(res), 500)
         })
-        .catch((error) => {
-          console.log(error)
+        .catch(() => {
+          enqueueSnackbar(messages.loadSequencesFailure, { variant: 'error' })
         })
     })
   }
@@ -114,6 +117,7 @@ class Sequences extends Component {
     // Whenever the table model changes, or the user sorts or changes pages, this method gets called and passed the current table model.
     // You can set the `loading` prop of the table to true to use the built-in one or show you're own loading bar if you want.
     this.setState({ loading: true })
+    console.log('state page is ', state.page)
     // Request the data however you want.  Here, we'll use our mocked service we created earlier
     this.requestData(
       state.pageSize,
@@ -127,6 +131,7 @@ class Sequences extends Component {
         pages: res.pages,
         loading: false
       })
+      console.log('request data just ran')
     })
   }
 
@@ -144,8 +149,6 @@ class Sequences extends Component {
   }
 
   render () {
-    const { data, pages, loading } = this.state
-    console.log('data is ', data)
     console.log('this state is ', this.state)
     console.log('at first', this.state.modalContent)
     return (
@@ -167,10 +170,10 @@ class Sequences extends Component {
                 <span className="sequence-link" onClick= { () => this.openModal(row) }>{row.sequence}</span>
               ) }
           ]}
-          // manual // Forces table not to paginate or sort automatically, so we can handle it server-side
+          manual // Forces table not to paginate or sort automatically, so we can handle it server-side
           data={this.state.data}
-          pages={pages} // Display the total number of pages
-          loading={loading} // Display the loading overlay when we need it
+          pages={this.state.pages} // Display the total number of pages
+          loading={this.state.loading} // Display the loading overlay when we need it
           onFetchData={this.fetchData} // Request new data when things change
           filterable
           defaultFilterMethod={(filter, row) => this.filterCaseInsensitive(filter, row) }
@@ -191,16 +194,16 @@ class Sequences extends Component {
             <div>Description: {this.state.modalContent.sequenceDescription}</div>
             <div>Sequence:</div>
             <div className="full-sequence">
-              {(this.renderLetter(this.state.modalContent.sequence)).map(letter => {
+              {(this.renderLetter(this.state.modalContent.sequence)).map((letter, index) => {
                 switch (letter) {
                 case 'A':
-                  return <span style={{ color: 'red' }}>{letter}</span>
+                  return <span style={{ color: 'red' }} key={index}>{letter}</span>
                 case 'T':
-                  return <span style={{ color: 'orange' }}>{letter}</span>
+                  return <span style={{ color: 'orange' }} key={index}>{letter}</span>
                 case 'C':
-                  return <span style={{ color: 'blue' }}>{letter}</span>
+                  return <span style={{ color: 'blue' }} key={index}>{letter}</span>
                 default:
-                  return <span style={{ color: 'green' }}>{letter}</span>
+                  return <span style={{ color: 'green' }} key={index}>{letter}</span>
                 }
               }) } </div>
           </div> : '' }
@@ -212,4 +215,4 @@ class Sequences extends Component {
 
 render(<Sequences />, document.getElementById('root'))
 
-export default withRouter(Sequences)
+export default withSnackbar(withRouter(Sequences))

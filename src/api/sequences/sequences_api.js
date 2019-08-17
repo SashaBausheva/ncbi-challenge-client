@@ -7,3 +7,11 @@ export const indexSequenceEntries = () => {
     method: 'GET'
   })
 }
+
+export const addSequenceEntry = (sequence) => {
+  return axios({
+    url: `${apiUrl}/sequences`,
+    method: 'POST',
+    data: { sequence: sequence }
+  })
+}
