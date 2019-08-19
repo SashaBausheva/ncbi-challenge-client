@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 import { withSnackbar } from 'notistack'
 import messages from './messages'
+import { saveAs } from 'file-saver'
 
 import { indexSequenceEntries } from '../../api/sequences/sequences_api'
 import '../../index.scss'
@@ -77,6 +78,7 @@ class Sequences extends Component {
       indexSequenceEntries()
         .then((response) => {
           const filteredData = response.data.sequences
+          console.log('data is ', response.data)
 
           // You can also use the sorting in your request, but again, you are responsible for applying it.
           const sortedData = _.orderBy(
@@ -102,7 +104,6 @@ class Sequences extends Component {
           }
 
           console.log('res is ', res)
-          console.log('filtered data is ', filteredData)
 
           // Here we'll simulate a server response with 500ms of delay.
           setTimeout(() => resolve(res), 500)
@@ -148,6 +149,16 @@ class Sequences extends Component {
     return array
   }
 
+  downloadJson () {
+    indexSequenceEntries()
+      .then((response) => {
+        const sequences = JSON.stringify(response.data)
+        console.log('seq is', sequences)
+        const blob = new Blob([sequences], { type: 'text/plain;charset=utf-8' })
+        saveAs(blob, 'DNA-json.json')
+      })
+  }
+
   render () {
     console.log('this state is ', this.state)
     console.log('at first', this.state.modalContent)
@@ -181,6 +192,8 @@ class Sequences extends Component {
           className="-striped -highlight"
         />
         <br />
+
+        <button onClick={this.downloadJson}>Download Table</button>
 
         <Modal
           isOpen={this.state.modalOpen}
