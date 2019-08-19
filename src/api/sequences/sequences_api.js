@@ -15,3 +15,11 @@ export const addSequenceEntry = (sequence) => {
     data: { sequence: sequence }
   })
 }
+
+export const addSequencesFromFile = (jsonFile) => {
+  return axios({
+    url: `${apiUrl}/upload`,
+    method: 'POST',
+    data: { sequences: jsonFile.sequences }
+  })
+}

@@ -4,7 +4,7 @@ import { withSnackbar } from 'notistack'
 import messages from './messages'
 import { saveAs } from 'file-saver'
 
-import { indexSequenceEntries } from '../../api/sequences/sequences_api'
+import { indexSequenceEntries, addSequencesFromFile } from '../../api/sequences/sequences_api'
 import '../../index.scss'
 
 import { render } from 'react-dom'
@@ -77,8 +77,16 @@ class Sequences extends Component {
 
       indexSequenceEntries()
         .then((response) => {
-          const filteredData = response.data.sequences
+          let filteredData = response.data.sequences
           console.log('data is ', response.data)
+
+          if (filtered.length) {
+            filteredData = filtered.reduce((filteredSoFar, nextFilter) => {
+              return filteredSoFar.filter(row => {
+                return ((row[nextFilter.id] + '').toLowerCase()).includes((nextFilter.value).toLowerCase())
+              })
+            }, filteredData)
+          }
 
           // You can also use the sorting in your request, but again, you are responsible for applying it.
           const sortedData = _.orderBy(
@@ -115,6 +123,7 @@ class Sequences extends Component {
   }
 
   fetchData (state, instance) {
+    console.log('state and instance are ', state, instance)
     // Whenever the table model changes, or the user sorts or changes pages, this method gets called and passed the current table model.
     // You can set the `loading` prop of the table to true to use the built-in one or show you're own loading bar if you want.
     this.setState({ loading: true })
@@ -137,6 +146,7 @@ class Sequences extends Component {
   }
 
   filterCaseInsensitive (filter, row) {
+    console.log('filter and row', filter, row)
     const id = filter.pivotId || filter.id
     return (
       row[id] !== undefined
@@ -156,6 +166,26 @@ class Sequences extends Component {
         console.log('seq is', sequences)
         const blob = new Blob([sequences], { type: 'text/plain;charset=utf-8' })
         saveAs(blob, 'DNA-json.json')
+      })
+  }
+
+  onChange = (event) => {
+    const reader = new FileReader()
+    reader.onload = this.onReaderLoad
+    reader.readAsText(event.target.files[0])
+  }
+
+  onReaderLoad = (event) => {
+    const { enqueueSnackbar } = this.props
+    console.log(event.target.result)
+    const obj = JSON.parse(event.target.result)
+    console.log(obj)
+    addSequencesFromFile(obj)
+      .then(
+        () => this.refReactTable.fireFetchData(),
+        document.getElementById('sequence_file').reset())
+      .catch(() => {
+        enqueueSnackbar(messages.uploadSequencesFailure, { variant: 'error' })
       })
   }
 
@@ -190,10 +220,15 @@ class Sequences extends Component {
           defaultFilterMethod={(filter, row) => this.filterCaseInsensitive(filter, row) }
           defaultPageSize={10}
           className="-striped -highlight"
+          ref={(refReactTable) => { this.refReactTable = refReactTable }}
         />
         <br />
 
         <button onClick={this.downloadJson}>Download Table</button>
+
+        <form id="sequence_file" onSubmit={this.handleSubmit} encType="multipart/form-data">
+          <input type="file" name="file" onChange={this.onChange}/>
+        </form>
 
         <Modal
           isOpen={this.state.modalOpen}

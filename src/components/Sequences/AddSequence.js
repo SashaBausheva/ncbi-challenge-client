@@ -33,16 +33,18 @@ class AddSequence extends Component {
     const { enqueueSnackbar } = this.props
 
     addSequenceEntry(this.state.sequence)
-      .then(res => this.setState({ createdSequenceId: res.data.sequence.id }))
+      .then(res => this.setState({ createdSequenceId: res.data.sequence._id }))
+      .then(() => enqueueSnackbar(messages.addSequenceSuccess, { variant: 'success' }))
       .catch(() => { enqueueSnackbar(messages.addSequenceFailure, { variant: 'error' }) })
   }
 
   render () {
     const { handleChange, handleSubmit } = this
     const { createdSequenceId, sequence } = this.state
+    console.log('created seq id', createdSequenceId)
 
     if (createdSequenceId) {
-      return <Redirect to={`/sequences/${createdSequenceId}`} />
+      return <Redirect to={'/sequences'} />
     }
 
     return (
@@ -51,7 +53,7 @@ class AddSequence extends Component {
           sequence={sequence}
           handleChange={handleChange}
           handleSubmit={handleSubmit}
-          cancelPath="/"
+          cancelPath={'/sequences'}
         />
       </div>
     )
