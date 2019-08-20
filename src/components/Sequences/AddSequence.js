@@ -48,7 +48,7 @@ class AddSequence extends Component {
     }
 
     return (
-      <div>
+      <div style={{ marginTop: '2rem' }}>
         <SequenceForm
           sequence={sequence}
           handleChange={handleChange}

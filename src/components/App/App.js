@@ -27,12 +27,12 @@ class App extends Component {
   }
 
   render () {
-    const { alerts, user } = this.state
+    const { alerts } = this.state
 
     return (
       <Fragment>
-        <SnackbarProvider maxSnack={3} autoHideDuration={2000}>
-          <Header user={user} />
+        <SnackbarProvider maxSnack={3} autoHideDuration={4000}>
+          <Header />
           {alerts.map((alert, index) => (
             <AutoDismissAlert
               key={index}

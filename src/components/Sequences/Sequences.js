@@ -3,11 +3,12 @@ import { withRouter } from 'react-router-dom'
 import { withSnackbar } from 'notistack'
 import messages from './messages'
 import { saveAs } from 'file-saver'
+import Button from '@material-ui/core/Button'
+import Grid from '@material-ui/core/Grid'
 
 import { indexSequenceEntries, addSequencesFromFile } from '../../api/sequences/sequences_api'
 import '../../index.scss'
 
-import { render } from 'react-dom'
 import Modal from 'react-modal'
 import _ from 'lodash'
 
@@ -128,7 +129,6 @@ class Sequences extends Component {
     // You can set the `loading` prop of the table to true to use the built-in one or show you're own loading bar if you want.
     this.setState({ loading: true })
     console.log('state page is ', state.page)
-    // Request the data however you want.  Here, we'll use our mocked service we created earlier
     this.requestData(
       state.pageSize,
       state.page,
@@ -195,6 +195,7 @@ class Sequences extends Component {
     return (
       <div>
         <ReactTable
+          style={{ marginTop: '3rem' }}
           columns={[
             {
               Header: 'Name',
@@ -224,10 +225,18 @@ class Sequences extends Component {
         />
         <br />
 
-        <button onClick={this.downloadJson}>Download Table</button>
-
-        <form id="sequence_file" onSubmit={this.handleSubmit} encType="multipart/form-data">
-          <input type="file" name="file" onChange={this.onChange}/>
+        <form onSubmit={this.handleSubmit} id="sequence_file" encType="multipart/form-data">
+          <Grid
+            justify="space-between"
+            container
+          >
+            <Grid item>
+              <Button onClick={this.downloadJson} color="primary" variant="contained">Download Table</Button>
+            </Grid>
+            <Grid item>
+              <Button color="primary"><span style={{ marginRight: '1rem' }}>Upload JSON file</span><input type="file" name="file" onChange={this.onChange}/></Button>
+            </Grid>
+          </Grid>
         </form>
 
         <Modal
@@ -237,7 +246,7 @@ class Sequences extends Component {
           contentLabel="Example Modal"
         >
           {this.state.modalContent.sequence ? <div><h2>Sequence Info</h2>
-            <button onClick={this.closeModal}>close</button>
+            <Button color="primary" variant="contained" onClick={this.closeModal}>close</Button>
             <div>Name: {this.state.modalContent.sequenceName}</div>
             <div>Description: {this.state.modalContent.sequenceDescription}</div>
             <div>Sequence:</div>
@@ -245,11 +254,11 @@ class Sequences extends Component {
               {(this.renderLetter(this.state.modalContent.sequence)).map((letter, index) => {
                 switch (letter) {
                 case 'A':
-                  return <span style={{ color: 'red' }} key={index}>{letter}</span>
+                  return <span style={{ color: 'blue' }} key={index}>{letter}</span>
                 case 'T':
                   return <span style={{ color: 'orange' }} key={index}>{letter}</span>
                 case 'C':
-                  return <span style={{ color: 'blue' }} key={index}>{letter}</span>
+                  return <span style={{ color: 'red' }} key={index}>{letter}</span>
                 default:
                   return <span style={{ color: 'green' }} key={index}>{letter}</span>
                 }
@@ -260,7 +269,4 @@ class Sequences extends Component {
     )
   }
 }
-
-render(<Sequences />, document.getElementById('root'))
-
 export default withSnackbar(withRouter(Sequences))
