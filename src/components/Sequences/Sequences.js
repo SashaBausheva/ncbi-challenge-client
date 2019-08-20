@@ -1,22 +1,48 @@
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
 import { withSnackbar } from 'notistack'
-import messages from './messages'
 import { saveAs } from 'file-saver'
-import Button from '@material-ui/core/Button'
-import Grid from '@material-ui/core/Grid'
-
-import { indexSequenceEntries, addSequencesFromFile } from '../../api/sequences/sequences_api'
-import '../../index.scss'
-
 import Modal from 'react-modal'
 import _ from 'lodash'
-
-// Import React Table
 import ReactTable from 'react-table'
 import 'react-table/react-table.css'
 
+import Button from '@material-ui/core/Button'
+import Grid from '@material-ui/core/Grid'
+import Box from '@material-ui/core/Box'
+
+import { indexSequenceEntries, addSequencesFromFile } from '../../api/sequences/sequences_api'
+import messages from './messages'
+import '../../index.scss'
+
 Modal.setAppElement(document.getElementById('root'))
+
+const styles = {
+  paper: {
+    padding: '2rem',
+    margin: '2rem'
+  },
+  box: {
+    backgroundColor: '#f5f5fc',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'row',
+    height: '55vh',
+    borderRadius: '10px'
+  }
+}
+
+// Modal styles
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)'
+  }
+}
 
 class Sequences extends Component {
   constructor () {
@@ -25,7 +51,9 @@ class Sequences extends Component {
       data: [],
       pages: null,
       loading: true,
+      // modal is closed unless triggered
       modalOpen: false,
+      // and its content is empty unless otherwise stated
       modalContent: {
         sequenceName: '',
         sequenceDescription: '',
@@ -39,8 +67,8 @@ class Sequences extends Component {
   }
 
   openModal (row) {
+    // update state when modal is open
     if (!this.state.modalOpen) {
-      console.log('this is row', row)
       this.setState({
         modalContent: {
           sequenceName: row._original.sequenceName,
@@ -53,10 +81,11 @@ class Sequences extends Component {
   }
 
   afterOpenModal () {
-  // references are now sync'd and can be accessed.
+    // might implement features in the future
   }
 
   closeModal () {
+    // update state when modal is closed
     if (this.state.modalOpen) {
       this.setState({
         modalContent: {
@@ -73,23 +102,23 @@ class Sequences extends Component {
 
   requestData = (pageSize, page, sorted, filtered) => {
     return new Promise((resolve, reject) => {
-      // You can retrieve your data however you want, in this case, we will just use some local data.
       const { enqueueSnackbar } = this.props
 
+      // Retrieve data using axios GET request
       indexSequenceEntries()
         .then((response) => {
           let filteredData = response.data.sequences
-          console.log('data is ', response.data)
-
+          // keep filtering until you reach the end of the array
           if (filtered.length) {
             filteredData = filtered.reduce((filteredSoFar, nextFilter) => {
+              // ensure filtering is case-insensitive
               return filteredSoFar.filter(row => {
                 return ((row[nextFilter.id] + '').toLowerCase()).includes((nextFilter.value).toLowerCase())
               })
             }, filteredData)
           }
 
-          // You can also use the sorting in your request, but again, you are responsible for applying it.
+          // take filtered data and use lodash to order it
           const sortedData = _.orderBy(
             filteredData,
             sorted.map(sort => {
@@ -102,51 +131,44 @@ class Sequences extends Component {
                   : row[sort.id].toLowerCase()
               }
             }),
+            // make it ascenfing unless descending is specified
             sorted.map(d => (d.desc ? 'desc' : 'asc'))
           )
-
-          console.log('sorted data is ', sortedData)
-          // You must return an object containing the rows of the current page, and optionally the total pages number.
+          // finally, return number of pages and rows
           const res = {
             rows: sortedData.slice(pageSize * page, pageSize * page + pageSize),
             pages: Math.ceil(filteredData.length / pageSize)
           }
-
-          console.log('res is ', res)
-
-          // Here we'll simulate a server response with 500ms of delay.
           setTimeout(() => resolve(res), 500)
         })
         .catch(() => {
+          // alert if something went wrong (e.g. GET request failed)
           enqueueSnackbar(messages.loadSequencesFailure, { variant: 'error' })
         })
     })
   }
 
   fetchData (state, instance) {
-    console.log('state and instance are ', state, instance)
     // Whenever the table model changes, or the user sorts or changes pages, this method gets called and passed the current table model.
-    // You can set the `loading` prop of the table to true to use the built-in one or show you're own loading bar if you want.
     this.setState({ loading: true })
-    console.log('state page is ', state.page)
     this.requestData(
       state.pageSize,
       state.page,
       state.sorted,
       state.filtered
     ).then(res => {
-      // Now just get the rows of data to your React Table (and update anything else like total pages or loading)
+      // Now just get the rows of data to React Table (and update anything else like total pages or loading)
       this.setState({
         data: res.rows,
         pages: res.pages,
         loading: false
       })
-      console.log('request data just ran')
     })
   }
 
+  // this should be a simpler customFilter; however right now the table is using
+  // the filter above. I kept it  here to work with it later
   filterCaseInsensitive (filter, row) {
-    console.log('filter and row', filter, row)
     const id = filter.pivotId || filter.id
     return (
       row[id] !== undefined
@@ -154,21 +176,23 @@ class Sequences extends Component {
         : true)
   }
 
+  // break sequence strings into arrays to be able to assign letter color
   renderLetter (sequence) {
     const array = sequence.split('')
     return array
   }
 
+  // GET all sequence entries, create a blob, and use saveAs to trigger download
   downloadJson () {
     indexSequenceEntries()
       .then((response) => {
         const sequences = JSON.stringify(response.data)
-        console.log('seq is', sequences)
         const blob = new Blob([sequences], { type: 'text/plain;charset=utf-8' })
-        saveAs(blob, 'DNA-json.json')
+        saveAs(blob, new Date() + '-DNA-json.json')
       })
   }
 
+  // when there's a change in the upload form (JSON file selected), fire upload
   onChange = (event) => {
     const reader = new FileReader()
     reader.onload = this.onReaderLoad
@@ -177,21 +201,19 @@ class Sequences extends Component {
 
   onReaderLoad = (event) => {
     const { enqueueSnackbar } = this.props
-    console.log(event.target.result)
     const obj = JSON.parse(event.target.result)
-    console.log(obj)
     addSequencesFromFile(obj)
       .then(
+        // when POST is successful, refresh the table
         () => this.refReactTable.fireFetchData(),
         document.getElementById('sequence_file').reset())
       .catch(() => {
+        // alert if failed
         enqueueSnackbar(messages.uploadSequencesFailure, { variant: 'error' })
       })
   }
 
   render () {
-    console.log('this state is ', this.state)
-    console.log('at first', this.state.modalContent)
     return (
       <div>
         <ReactTable
@@ -231,38 +253,41 @@ class Sequences extends Component {
             container
           >
             <Grid item>
-              <Button onClick={this.downloadJson} color="primary" variant="contained">Download Table</Button>
+              <Button style={{ outline: 'none' }} onClick={this.downloadJson} color="primary" variant="contained">Download Table</Button>
             </Grid>
             <Grid item>
-              <Button color="primary"><span style={{ marginRight: '1rem' }}>Upload JSON file</span><input type="file" name="file" onChange={this.onChange}/></Button>
+              <Button color="primary" style={{ outline: 'none' }}><span style={{ marginRight: '1rem' }}>Upload JSON file</span><input type="file" name="file" onChange={this.onChange}/></Button>
             </Grid>
           </Grid>
         </form>
 
         <Modal
+          styles={customStyles}
           isOpen={this.state.modalOpen}
           onAfterOpen={this.afterOpenModal}
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
         >
-          {this.state.modalContent.sequence ? <div><h2>Sequence Info</h2>
-            <Button color="primary" variant="contained" onClick={this.closeModal}>close</Button>
-            <div>Name: {this.state.modalContent.sequenceName}</div>
-            <div>Description: {this.state.modalContent.sequenceDescription}</div>
-            <div>Sequence:</div>
-            <div className="full-sequence">
-              {(this.renderLetter(this.state.modalContent.sequence)).map((letter, index) => {
-                switch (letter) {
-                case 'A':
-                  return <span style={{ color: 'blue' }} key={index}>{letter}</span>
-                case 'T':
-                  return <span style={{ color: 'orange' }} key={index}>{letter}</span>
-                case 'C':
-                  return <span style={{ color: 'red' }} key={index}>{letter}</span>
-                default:
-                  return <span style={{ color: 'green' }} key={index}>{letter}</span>
-                }
-              }) } </div>
+          <div className="text-right"><Button style={{ alignItems: 'right', outline: 'none' }} color="primary" onClick={this.closeModal}>close</Button></div>
+          {this.state.modalContent.sequence ? <div className="sequence-info">
+            <div><h5>Name:</h5> <div style={{ marginBottom: '.5rem' }}>{this.state.modalContent.sequenceName}</div></div>
+            <div><h5>Description:</h5> <div style={{ marginBottom: '.5rem' }}>{this.state.modalContent.sequenceDescription}</div></div>
+            <div><h5>Sequence:</h5></div>
+            <Box style={styles.box}>
+              <div className="full-sequence">
+                {(this.renderLetter(this.state.modalContent.sequence)).map((letter, index) => {
+                  switch (letter) {
+                  case 'A':
+                    return <span style={{ color: 'blue' }} key={index}>{letter}</span>
+                  case 'T':
+                    return <span style={{ color: 'orange' }} key={index}>{letter}</span>
+                  case 'C':
+                    return <span style={{ color: 'red' }} key={index}>{letter}</span>
+                  default:
+                    return <span style={{ color: 'green' }} key={index}>{letter}</span>
+                  }
+                }) } </div>
+            </Box>
           </div> : '' }
         </Modal>
       </div>

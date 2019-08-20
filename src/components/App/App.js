@@ -4,6 +4,7 @@ import { SnackbarProvider } from 'notistack'
 
 import AutoDismissAlert from '../AutoDismissAlert/AutoDismissAlert'
 import Header from '../Header/Header'
+import Home from '../Home/Home'
 
 import Sequences from '../Sequences/Sequences'
 import AddSequence from '../Sequences/AddSequence'
@@ -47,6 +48,9 @@ class App extends Component {
             )} />
             <Route path='/add-sequence' render={() => (
               <AddSequence alert={this.alert} />
+            )} />
+            <Route exact path='/' render={() => (
+              <Home alert={this.alert} />
             )} />
           </main>
         </SnackbarProvider>
