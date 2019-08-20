@@ -29,7 +29,7 @@ This is a single-page application allowing users to access a database of DNA seq
 ## Planning, Process, and Problem-solving Strategy
 I approached this project by first creating my back-end schema to ensure I understand the required structure for my http requests. The sequence model includes: sequence name (string, uniue), sequence description (string), and the sequence itsel. I also needed to ensure every sequence in the database is unique, which I addressed in my POST routes.
 After my backend skeleton was set up and tested with cURL scripts, I focused on the view-sequences view. I implemented the ReactTable component on the front end to GET (index) and display sequence data. The component allows users to filter and/or sort the data by name, description, and sequence itself. I then included a Model component to display each sequence entry separately by clicking on the truncated sequence in the table.
-After the basic aspects of the table were functioning, I swithed to the add-sequence view. The form in it allows users to manually input sequence information and submit it firing a POST request. If the data is added to the database successfully, the application redirects to the view-sequences view where the new sequence is rendered along with the rest.
+After the basic aspects of the table were functioning, I swithed to the add-sequence view. The form in it allows users to manually input sequence information and submit it firing a POST request. If the data is added to the database successfully, the application redirects to the view-sequences view where the new sequence is rendered along with the rest.  
 Finally, I added two more features to view-sequences: Users can now upload multiple sequences via a JSON file and download the entire database as a JSON file as well.
 
 ## Feature Summary
@@ -46,10 +46,10 @@ Finally, I added two more features to view-sequences: Users can now upload multi
     - Cool gif on homepage
 
 ## Unsolved Problems / Future Iterations
-    - Not an unsolved problem, but an interesting discovery: Mongoose will not allow you to set sequences as indexes and make them unique via sequence schema since most sequences are too long. I had to find an alternative solution via Sequence.count(parameters) in sequence routes.
-    - Also solved, but interesting to note: I had to implement Promises.all in the POST route for JSON file upload. When a user uploads a file, the back-end has to only send the response data that will trigger table refresh after it has added all the sequences from the file to the database. In order to do that, I needed to create promises for each sequence from the file and only send a response back to client after all of the promises have been resolved.
-    - I would like to style the JSON file input form in a more aesthetically pleasing way in the future.
-    - I would like to allow users to remove or edit sequences. However, this might result in unwanted data alteration, so I would need to think how to approach this problem (perhaps by implementing authentication). This would depend on the ultimate goal of the application.
+    1. Not an unsolved problem, but an interesting discovery: Mongoose will not allow you to set sequences as indexes and make them unique via sequence schema since most sequences are too long. I had to find an alternative solution via Sequence.count(parameters) in sequence routes.
+    1. Also solved, but interesting to note: I had to implement Promises.all in the POST route for JSON file upload. When a user uploads a file, the back-end has to only send the response data that will trigger table refresh after it has added all the sequences from the file to the database. In order to do that, I needed to create promises for each sequence from the file and only send a response back to client after all of the promises have been resolved.
+    1. I would like to style the JSON file input form in a more aesthetically pleasing way in the future.
+    1. I would like to allow users to remove or edit sequences. However, this might result in unwanted data alteration, so I would need to think how to approach this problem (perhaps by implementing authentication). This would depend on the ultimate goal of the application.
 
 #### User Stories
 * As a user, I want to be able to view all DNA sequences in the database.
