@@ -1,7 +1,5 @@
 # NCBI Visual DNA Database Representation
 
-This application National Center for Biotechnology Information:
-
 ## Links
 - Link to deployed site: https://sashabausheva.github.io/ncbi-challenge-client
 - Link to the API repository: https://github.com/SashaBausheva/ncbi-challenge-api
