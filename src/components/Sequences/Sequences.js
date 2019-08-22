@@ -256,7 +256,7 @@ class Sequences extends Component {
               <Button style={{ outline: 'none' }} onClick={this.downloadJson} color="primary" variant="contained">Download Table</Button>
             </Grid>
             <Grid item>
-              <Button color="primary" style={{ outline: 'none' }}><span style={{ marginRight: '1rem' }}>Upload JSON file</span><input type="file" name="file" onChange={this.onChange}/></Button>
+              <Button color="primary" style={{ outline: 'none', cursor: 'default' }} disableRipple="true"><span style={{ marginRight: '1rem' }}>Upload JSON file</span><input type="file" name="file" onChange={this.onChange}/></Button>
             </Grid>
           </Grid>
         </form>
